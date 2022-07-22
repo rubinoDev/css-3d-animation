@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Container, Inner } from './styles';
+import { hexToRGB } from './utils';
+
+import PropTypes from 'prop-types';
 
 const UPDATE_RATE = 10;
 const INITIAL_POSITION = {
@@ -7,15 +10,19 @@ const INITIAL_POSITION = {
   y: 0
 }
 
-const App = ({ children,  }) => {
+const App = ({ children, depth, shadow, shadowColor, shadowOpacity }) => {
   const [mouse, setMouse] = useState(INITIAL_POSITION)
   const [origin, setOrigin] = useState(INITIAL_POSITION)
   const [counter, setCounter] = useState(0);
 
-  const [transformStyles, setTransformStyles] = useState(INITIAL_POSITION)
+  const [transformStyles, setTransformStyles] = useState(INITIAL_POSITION);
 
   const containerRef = useRef(null);
   const innerRef = useRef(null);
+
+  useEffect(() => {
+    console.log(hexToRGB(shadowColor))
+  }, [])
 
   useEffect(() => {
     setTransformStyles({
@@ -55,8 +62,21 @@ const App = ({ children,  }) => {
   }, [isTimeToUpdate, updatePosition, setCounter])
 
  return ( 
-    <Container ref={containerRef} onMouseMove={handleMouseMove} onMouseEnter={updatePosition} onMouseLeave={handleMouseLeave}>
-      <Inner ref={innerRef} x={transformStyles.x} y={transformStyles.y}>
+    <Container 
+      ref={containerRef} 
+      onMouseMove={handleMouseMove} 
+      onMouseEnter={updatePosition} 
+      onMouseLeave={handleMouseLeave} 
+      depth={depth}
+    >
+      <Inner 
+        ref={innerRef} 
+        x={transformStyles.x} 
+        y={transformStyles.y}
+        shadow={shadow}
+        shadowColor={hexToRGB(shadowColor)}
+        shadowOpacity={shadowOpacity}
+      >
         {children}
       </Inner>
     </Container>
@@ -64,3 +84,19 @@ const App = ({ children,  }) => {
 }
 
 export default App
+
+
+App.propTypes = {
+  children: PropTypes.node.isRequired, 
+  depth: PropTypes.oneOf(['low', 'medium', 'high']),
+  shadow: PropTypes.bool, 
+  shadowColor: PropTypes.string, 
+  shadowOpacity: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+}
+
+App.defaultProps = {
+  depth: 'low',
+  shadow: false,
+  shadowColor: "#000000",
+  shadowOpacity: "0.2"
+}
