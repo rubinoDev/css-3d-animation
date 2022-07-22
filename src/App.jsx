@@ -1,32 +1,32 @@
-import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react'
-import { Container, Inner } from './styles'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Container, Inner } from './styles';
 
-const App = () => {
-  const [mouse, setMouse] = useState({
-    x: 0,
-    y: 0
-  })
-  const [origin, setOrigin] = useState({
-    x: 0,
-    y: 0
-  })
+const UPDATE_RATE = 10;
+const INITIAL_POSITION = {
+  x: 0,
+  y: 0
+}
 
+const App = ({ children,  }) => {
+  const [mouse, setMouse] = useState(INITIAL_POSITION)
+  const [origin, setOrigin] = useState(INITIAL_POSITION)
   const [counter, setCounter] = useState(0);
+
+  const [transformStyles, setTransformStyles] = useState(INITIAL_POSITION)
 
   const containerRef = useRef(null);
   const innerRef = useRef(null);
 
-  const updateRate = useMemo(() => 10, []);
-
-  
-  const transformStyles = useMemo(() => ({
-    x: (mouse.y / innerRef?.current?.offsetHeight / 2).toFixed(2),
-    y: (mouse.x / innerRef?.current?.offsetWidth / 2).toFixed(2)
-  }), [mouse, innerRef])
+  useEffect(() => {
+    setTransformStyles({
+         x: (mouse.y / innerRef?.current?.offsetHeight / 2).toFixed(2),
+         y: (mouse.x / innerRef?.current?.offsetWidth / 2).toFixed(2)
+       })
+  }, [mouse, innerRef])
 
   const isTimeToUpdate = useMemo(() => {
-    return counter % updateRate === 0;
-  }, [ counter, updateRate ])
+    return counter % UPDATE_RATE === 0;
+  }, [ counter, UPDATE_RATE ])
 
   useEffect(() => {
     setOrigin({
@@ -48,12 +48,17 @@ const App = () => {
     if (isTimeToUpdate) {
       updatePosition(event);
     }
-    }, [isTimeToUpdate, updatePosition, setCounter]
-  )
+  }, [isTimeToUpdate, updatePosition, setCounter])
+
+  const handleMouseLeave = useCallback(() => {
+    setTransformStyles(INITIAL_POSITION)
+  }, [isTimeToUpdate, updatePosition, setCounter])
 
  return ( 
-    <Container ref={containerRef} onMouseMove={handleMouseMove} onMouseEnter={updatePosition}>
-      <Inner ref={innerRef} x={transformStyles.x} y={transformStyles.y} />
+    <Container ref={containerRef} onMouseMove={handleMouseMove} onMouseEnter={updatePosition} onMouseLeave={handleMouseLeave}>
+      <Inner ref={innerRef} x={transformStyles.x} y={transformStyles.y}>
+        {children}
+      </Inner>
     </Container>
   )
 }
